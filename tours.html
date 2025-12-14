@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Dnyasa Tours - Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; overflow: hidden; }
+        .earth-brown { color: #5D4037; }
+        
+        #vanta-tours-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        }
+
+        /* Float Animation */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating-icon { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="bg-stone-50 text-gray-800 h-screen flex flex-col relative">
+
+    <div id="vanta-tours-bg"></div>
+
+    <nav class="absolute top-0 w-full p-6 flex justify-between items-center z-10">
+        <a href="index.html" class="text-2xl font-bold earth-brown flex items-center bg-white/50 backdrop-blur-md px-4 py-2 rounded-full shadow-sm hover:bg-white transition">
+            <i data-lucide="arrow-left" class="mr-2 w-5 h-5"></i>
+            Back to Home
+        </a>
+    </nav>
+
+    <main class="flex-1 flex flex-col items-center justify-center px-6 z-10">
+        
+        <div class="bg-white/80 backdrop-blur-xl p-8 md:p-12 rounded-3xl shadow-2xl border border-white/50 max-w-2xl w-full text-center relative overflow-hidden group">
+            
+            <div class="mb-6 flex justify-center">
+                <div class="bg-green-100 p-4 rounded-full floating-icon shadow-inner">
+                    <i data-lucide="map" class="w-12 h-12 text-green-700"></i>
+                </div>
+            </div>
+
+            <h1 class="text-4xl md:text-6xl font-bold earth-brown mb-4 tracking-tight">
+                Field Trips <br/> <span class="text-green-700">Coming Soon</span>
+            </h1>
+            
+            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                We are currently scouting locations for immersive geological field tours. 
+                From the Deccan Traps to coastal sedimentary basins, get ready to 
+                experience geology in the field with G-Dnyasa.
+            </p>
+
+            <div class="max-w-md mx-auto relative">
+                <form id="notifyForm" class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" id="notifyEmail" placeholder="Enter your email for updates" required 
+                        class="flex-1 px-5 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 shadow-sm bg-white/90">
+                    <button type="submit" class="bg-earth-brown text-white px-6 py-3 rounded-full font-semibold hover:bg-stone-700 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                        Notify Me <i data-lucide="bell" class="w-4 h-4"></i>
+                    </button>
+                </form>
+                <p id="successMsg" class="hidden text-green-700 font-semibold mt-3 text-sm flex items-center justify-center">
+                    <i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> You're on the list!
+                </p>
+                <p id="errorMsg" class="hidden text-red-600 font-semibold mt-3 text-sm"></p>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <p class="text-xs text-gray-500 uppercase tracking-widest font-semibold">
+                    Get ready! Exciting tours are loading…
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="absolute bottom-4 w-full text-center text-xs text-gray-500 z-10">
+        &copy; 2025 All Rights Reserved by Om Bhogan
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Initialize Vanta.js (Net Effect)
+        window.addEventListener('load', () => {
+            if (window.VANTA) {
+                VANTA.NET({
+                    el: "#vanta-tours-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    scale: 1.00,
+                    scaleMobile: 1.00,
+                    color: 0x4caf50,
+                    backgroundColor: 0xFDFBF8,
+                    points: 10.00,
+                    maxDistance: 22.00,
+                    spacing: 18.00
+                })
+            }
+        });
+
+        // --- SUPABASE & FORM LOGIC ---
+        
+        // YOUR CREDENTIALS
+        const SUPABASE_URL = 'https://bcilpbllbmtbfbbymvpw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWxwYmxsYm10YmZiYnltdnB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODI4MjAsImV4cCI6MjA4MDk1ODgyMH0.u0FsHel8AP3osNsoXsljAx2srkYhgU2nfZ7gieN1Gps';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const form = document.getElementById('notifyForm');
+        const msg = document.getElementById('successMsg');
+        const errorMsg = document.getElementById('errorMsg');
+        const emailInput = document.getElementById('notifyEmail');
+        const btn = form.querySelector('button');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Loading State
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Adding...';
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            const email = emailInput.value;
+
+            // Send to Supabase
+            const { data, error } = await supabase
+                .from('subscribers')
+                .insert([
+                    { email: email, source: 'Tours Page' }
+                ]);
+
+            if (error) {
+                console.error('Supabase Error:', error);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+                errorMsg.innerText = "Error: " + error.message;
+                errorMsg.classList.remove('hidden');
+            } else {
+                form.classList.add('hidden');
+                msg.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

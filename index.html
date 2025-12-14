@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Dnyasa Geology Mentorship</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.globe.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Original background color is now set in the Vanta.js init */
+            /* We make the body transparent so the background div shows through */
+            background-color: transparent;
+        }
+        .earth-brown { color: #5D4037; }
+        .earth-green { color: #4CAF50; }
+        .bg-earth-beige { background-color: #F5F5DC; }
+        .bg-earth-gray { background-color: #E0E0E0; }
+        .bg-earth-brown { background-color: #5D4037; }
+        .bg-earth-green { background-color: #4CAF50; }
+        .border-earth-brown { border-color: #5D4037; }
+
+        /* Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* The hero-bg is removed as the Vanta.js globe replaces it.
+        We make the section's background transparent.
+        */
+        .hero-bg {
+             /* background-image: url("..."); */
+             background-color: transparent;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(76, 175, 80, 0.5)); }
+            50% { filter: drop-shadow(0 0 15px rgba(76, 175, 80, 1)); }
+        }
+
+        .crystal-spinner {
+            animation: spin 10s linear infinite, glow 2.5s ease-in-out infinite;
+        }
+
+        /* --- NEW: Cursor Glow --- */
+        #cursor-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 40px; /* Size of the glow */
+            height: 40px;
+            /* Pastel blue/silver glow */
+            background: radial-gradient(circle, rgba(173, 216, 230, 0.4) 0%, rgba(200, 220, 240, 0.2) 50%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none; /* Allows clicking through the element */
+            z-index: 9999;
+            transition: transform 0.1s linear; /* Smooth follow */
+            /* This will be positioned by JS */
+        }
+
+        /* --- NEW: Globe Background Container --- */
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10; /* Sits behind ALL content */
+        }
+        
+        /* Make content sections have a slightly transparent bg to pop against the map */
+        #programs, #schedule, #resources, #contact {
+            background-color: #FFFFFF; /* Solid white for readability */
+        }
+        #about, #testimonials, #career-explorer, #register {
+             background-color: #FDFBF8; /* Solid light beige for readability */
+        }
+
+        /* Chatbot styles */
+        #chat-widget.hidden, #chat-window.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        
+        /* Modal styles */
+        #study-plan-modal.hidden {
+            display: none;
+        }
+        
+        .modal-content {
+             white-space: pre-wrap;
+             font-family: monospace;
+        }
+
+        /* Form Submission Animation */
+        @keyframes button-glow {
+            50% {
+                box-shadow: 0 0 20px #4CAF50, 0 0 30px #81C784;
+            }
+        }
+        #submitButton.is-animating {
+            animation: button-glow 1.5s ease-in-out;
+        }
+        .confetti-piece {
+            position: absolute;
+            bottom: 20%;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            animation: confetti-up 1.8s ease-out;
+        }
+        @keyframes confetti-up {
+            0% {
+                transform: translateY(0) scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-200px) scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* Registration Closed Animation */
+        @keyframes pulsing-glow {
+            0%, 100% {
+                color: #c62828; /* Darker Red */
+                text-shadow: 0 0 8px rgba(239, 83, 80, 0.4);
+            }
+            50% {
+                color: #ef5350; /* Lighter Red */
+                text-shadow: 0 0 16px rgba(239, 83, 80, 0.8);
+            }
+        }
+        .registration-closed-effect {
+            animation: pulsing-glow 2.5s ease-in-out infinite;
+        }
+
+        /* Burger Menu Animation */
+        #mobile-menu-button > div > span {
+            background-color: #5D4037; /* earth-brown */
+        }
+
+        #mobile-menu-button.open > div > span:nth-of-type(1) {
+            transform: translateY(0px) rotate(45deg);
+        }
+
+        #mobile-menu-button.open > div > span:nth-of-type(2) {
+            opacity: 0;
+        }
+
+        #mobile-menu-button.open > div > span:nth-of-type(3) {
+            transform: translateY(0px) rotate(-45deg);
+        }
+
+        /* Typing Animation */
+        @keyframes typing {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        @keyframes blink-caret {
+          from, to { border-color: transparent; }
+          50% { border-color: #5D4037; } /* earth-brown cursor */
+        }
+        .typing-animation {
+          display: inline-block;
+          overflow: hidden;
+          white-space: nowrap;
+          border-right: .15em solid #5D4037;
+          animation:
+            typing 3s steps(44, end),
+            blink-caret .75s step-end infinite;
+        }
+        
+        /* Form Focus Animations */
+        .form-input-group:focus-within label {
+            color: #15803d; /* green-700 */
+        }
+        .form-input-group:focus-within input, 
+        .form-input-group:focus-within select {
+            border-color: #15803d;
+            box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.1);
+        }
+
+        /* --- NEW: Modern Glassmorphism & Text Effects --- */
+        .glass-modern {
+            background: rgba(255, 255, 255, 0.35);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+
+        .text-glow-soft {
+            text-shadow: 0 0 25px rgba(76, 175, 80, 0.5);
+            background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="vanta-bg"></div>
+    
+    <div id="cursor-glow"></div>
+
+    <div id="page-loader" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-stone-50/80 backdrop-blur-lg transition-opacity duration-700">
+        <svg class="crystal-spinner w-20 h-20 text-green-700" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5.12 6.12 6 6 3.83-3.83a2 2 0 0 0 0-2.83L12.12.64a2 2 0 0 0-2.83 0L5.12 4.81a2 2 0 0 0 0 2.83Z"/><path d="m12 12 6 6 4.12-4.12a2 2 0 0 0 0-2.83l-2.83-2.83a2 2 0 0 0-2.83 0L12 12Z"/><path d="m12.87 12.87-1.74 1.74a2 2 0 0 1-2.83 0L.64 6.96a2 2 0 0 1 0-2.83L3.46 1.3a2 2 0 0 1 2.83 0l6.58 6.58"/></svg>
+        <p class="mt-4 text-lg earth-brown">Preparing your geology experience…</p>
+    </div>
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50 opacity-0 transition-opacity duration-1000">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="flex items-center group">
+                <img src="https://i.postimg.cc/N0B55F95/IMG-20251008-WA0004.jpg" alt="G-Dnyasa Logo" class="h-12 w-12 rounded-full object-cover mr-3 border-2 border-green-700/20 group-hover:border-green-700 transition-colors">
+                <span class="text-2xl font-bold earth-brown group-hover:text-green-700 transition-colors">G-Dnyasa</span>
+            </a>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#home" class="hover:text-green-700 transition-transform transform hover:scale-105">Home</a>
+                <a href="#programs" class="hover:text-green-700 transition-transform transform hover:scale-105">Programs</a>
+                <a href="#about" class="hover:text-green-700 transition-transform transform hover:scale-105">About</a>
+                <a href="#resources" class="hover:text-green-700 transition-transform transform hover:scale-105">Resources</a>
+                <a href="tours.html" class="hover:text-green-700 transition-transform transform hover:scale-105">Tours</a>
+                <a href="store.html" class="hover:text-green-700 transition-transform transform hover:scale-105">Store</a>
+                <a href="#contact" class="hover:text-green-700 transition-transform transform hover:scale-105">Contact</a>
+                <a href="#register" class="bg-green-700 text-white px-4 py-2 rounded-full hover:bg-green-800 transition-transform transform hover:scale-105 shadow-lg">Join Now</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden relative w-8 h-8 focus:outline-none z-50">
+                <span class="sr-only">Open main menu</span>
+                <div class="block w-5 absolute left-1/2 top-1/2 transform -translate-x-1.2 -translate-y-1/2">
+                    <span aria-hidden="true" class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out -translate-y-1.5"></span>
+                    <span aria-hidden="true" class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out"></span>
+                    <span aria-hidden="true" class="block absolute h-0.5 w-5 bg-current transform transition duration-500 ease-in-out translate-y-1.5"></span>
+                </div>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 space-y-2">
+            <a href="#home" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Home</a>
+            <a href="#programs" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Programs</a>
+            <a href="#about" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">About</a>
+            <a href="#resources" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Resources</a>
+            <a href="tours.html" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Tours</a>
+            <a href="store.html" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Store</a>
+            <a href="#contact" class="block hover:text-green-700 transition-transform transform hover:scale-105 origin-left">Contact</a>
+            <a href="#register" class="block bg-green-700 text-white text-center mt-2 px-4 py-2 rounded-full hover:bg-green-800 transition-transform transform hover:scale-105 shadow-lg">Join Now</a>
+        </div>
+    </header>
+
+    <main class="opacity-0 transition-opacity duration-1000">
+        <section id="home" class="py-20 md:py-32 hero-bg"> <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold earth-brown reveal">Get Set Ready to Rock the World!</h1>
+                <p class="mt-6 max-w-2xl mx-auto text-lg text-gray-600 reveal" style="transition-delay: 0.2s;">
+                    G-Dnyasa offers specialized mentorship for geology students preparing for competitive exams like CSIR-NET, GATE, IIT JAM, and other university tests. We provide the guidance and resources you need to excel.
+                </p>
+                <a href="#register" class="mt-10 inline-block bg-green-700 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-green-800 transition transform hover:scale-105 shadow-xl reveal" style="transition-delay: 0.4s;">
+                    Join the New Batch
+                </a>
+                <div id="registration-info" class="mt-12 max-w-lg mx-auto glass-modern p-8 rounded-2xl reveal" style="transition-delay: 0.6s;">
+                    <h3 class="text-2xl md:text-3xl font-bold mb-4 text-glow-soft leading-tight pb-1">Discover Rocks & Landscapes — Tour Coming Soon</h3>
+                    <a href="tours.html" class="inline-flex items-center justify-center bg-amber-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-amber-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                        View More Information
+                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="programs" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold earth-brown reveal">Our Mentorship Programs</h2>
+                    <p class="mt-4 text-gray-600 max-w-xl mx-auto reveal">Choose a plan that fits your preparation needs and goals.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 items-start">
+                    <div class="border rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow bg-stone-50 reveal">
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold earth-brown">Quartz (Basic)</h3>
+                            <p class="text-lg text-gray-500 mt-1">Good for concept revision</p>
+                            <p class="text-4xl font-bold mt-4">₹1500 <span class="text-2xl text-gray-400 line-through">₹2100</span></p>
+                            <p class="text-sm text-gray-500">for 12 Weeks</p>
+                        </div>
+                        <ul class="mt-8 space-y-3 text-gray-700">
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Live Classes</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Tests/Mock Tests</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Recorded Classes</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Exam Guidance</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Answer Writing Guidance</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>One-to-One Guidance</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Note Templates & Study Planners</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Resume Review</li>
+                        </ul>
+                    </div>
+                    <div class="border rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-shadow bg-white ring-2 ring-green-700 transform md:scale-105 reveal" style="transition-delay: 0.2s;">
+                         <div class="text-center relative">
+                             <span class="absolute -top-12 left-1/2 -translate-x-1/2 bg-green-700 text-white px-4 py-1 text-sm rounded-full font-semibold">Most Popular</span>
+                            <h3 class="text-2xl font-bold text-green-800">Garnet (Silver)</h3>
+                             <p class="text-lg text-gray-500 mt-1">Good for exam preparation</p>
+                            <p class="text-4xl font-bold mt-4">₹3000 <span class="text-2xl text-gray-400 line-through">₹3500</span></p>
+                            <p class="text-sm text-gray-500">for 15 Weeks</p>
+                   </div>
+                        <ul class="mt-8 space-y-3 text-gray-700">
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Live Classes</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Tests/Mock Tests</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Recorded Classes</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Exam Guidance</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Answer Writing Guidance</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>One-to-One Guidance</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Note Templates & Study Planners</li>
+                            <li class="flex items-center"><i data-lucide="x-circle" class="text-red-500 mr-3"></i>Resume Review</li>
+                        </ul>
+                    </div>
+                    <div class="border rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-shadow bg-stone-50 reveal" style="transition-delay: 0.4s;">
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold earth-brown">Diamond (Gold)</h3>
+                             <p class="text-lg text-gray-500 mt-1">Best for overall improvement</p>
+                            <p class="text-4xl font-bold mt-4">₹4000 <span class="text-2xl text-gray-400 line-through">₹5000</span></p>
+                            <p class="text-sm text-gray-500">for 15 Weeks</p>
+                   </div>
+                        <ul class="mt-8 space-y-3 text-gray-700">
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Live Classes</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Tests/Mock Tests</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Recorded Classes</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Exam Guidance</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>Answer Writing Guidance</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2" class="text-green-600 mr-3"></i>One-to-One Guidance</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2"class="text-green-600 mr-3"></i>Note Templates & Study Planners</li>
+                            <li class="flex items-center"><i data-lucide="check-circle-2"class="text-green-600 mr-3"></i>Resume Review</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-20">
+            <div class="container mx-auto px-6">
+                 <div class="flex flex-col md:flex-row items-center gap-12">
+                    <div class="md:w-1/3 text-center reveal">
+                        <img src="https://i.postimg.cc/jSzDxPjp/IMG-20221224-WA0027.jpg" alt="Ms. Apoorva Pimprikar" class="rounded-full w-64 h-64 mx-auto object-cover shadow-2xl border-4 border-white">
+                        <h3 class="text-2xl font-bold mt-6 earth-brown">Ms. Apoorva Pimprikar</h3>
+                        <p class="text-gray-600 mt-1">MSc Applied Geology</p>
+                        <p class="text-sm text-green-700 font-semibold mt-2">GATE GG 2024 & 2025 Qualified</p>
+                    </div>
+                    <div class="md:w-2/3 reveal" style="transition-delay: 0.2s;">
+                        <h2 class="text-3xl font-bold earth-brown mb-4">About the Mentor</h2>
+                        <p class="text-gray-700 mb-4 leading-relaxed">
+                            With a passion for geology and a track record of success in competitive exams, I founded G-Dnyasa to guide students through their preparation journey. My teaching philosophy is centered on building strong conceptual foundations, practicing consistently, and developing effective exam strategies. I'm here to help you navigate the complexities of these exams and achieve your academic goals.
+                        </p>
+                        <div class="bg-green-50 border-l-4 border-green-600 p-6 rounded-r-lg mt-6">
+                            <p class="text-lg italic text-green-800">
+                                “My goal is to make complex geological concepts accessible and enjoyable. I believe every student has the potential to succeed with the right guidance and a little bit of hard work. Let's embark on this journey together!”
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+<section id="schedule" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold earth-brown reveal">Mentorship Schedule</h2>
+                    <p class="mt-4 text-gray-600 max-w-2xl mx-auto reveal">A 15-week journey covering the entire geology syllabus, with flexible sessions and dedicated exam strategy discussions.</p>
+                     <div class="mt-8 inline-flex items-center bg-stone-100 p-4 rounded-2xl shadow-md border reveal">
+                        <i data-lucide="calendar-days" class="w-10 h-10 text-green-700 mr-4"></i>
+                        <div>
+                            <p class="text-lg font-semibold text-left">Wednesday & Thursday</p>
+                            <p class="text-md text-gray-600 text-left">7:00 PM – 9:00 PM (Online)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="max-w-3xl mx-auto reveal">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg font-semibold">
+                            <div class="col-span-1">Week</div>
+                            <div class="col-span-2">Topic</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                            <div class="font-semibold">Week 1</div>
+                            <div>Physical Geology</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 2</div>
+                            <div>Mineralogy</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                             <div class="font-semibold">Week 3</div>
+                            <div>Petrology</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 4</div>
+                            <div>Structural Geology</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                            <div class="font-semibold">Week 5</div>
+                            <div>Tectonics</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 6</div>
+                            <div>Paleontology</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                             <div class="font-semibold">Week 7</div>
+                            <div>Stratigraphy</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 8</div>
+                            <div>Ore Geology</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                            <div class="font-semibold">Week 9</div>
+                            <div>Hydrogeology and Remote Sensing</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 10</div>
+                            <div>Geophysics</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-lg border">
+                             <div class="font-semibold">Week 11</div>
+                            <div>Geochemistry</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-4 p-4 bg-stone-50 rounded-lg">
+                            <div class="font-semibold">Week 12</div>
+                            <div>Applied Geology (Mining, Engineering geology)</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-amber-50 rounded-lg border border-amber-300">
+                            <div class="font-semibold">13*</div>
+                            <div>Oceanography and Climatology</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-4 p-4 bg-amber-50 rounded-lg border border-amber-300">
+                            <div class="font-semibold">14*</div>
+                            <div>Exam Strategy Sessions</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 p-4 bg-amber-50 rounded-lg border border-amber-300">
+                            <div class="font-semibold">15*</div>
+                            <div>Mega Mock Test</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center">*Weeks 13-15 are for Silver and Gold members only. Schedule subject to change.</p>
+                </div>
+            </div>
+        </section>
+        <section id="testimonials" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold earth-brown reveal">What Our Students Say</h2>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border reveal">
+                        <p class="text-gray-600 italic">"The concept capsules have been very helpful as we started with the basics, my favourite part of the mentorship would be the solving of PYQs as they provided me with clarity on how the questions will be asked."</p>
+                        <p class="mt-4 font-bold earth-brown">- Batch 1 Student</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border reveal" style="transition-delay: 0.2s;">
+                        <p class="text-gray-600 italic">"What makes Apoorva stand out is her innovative teaching style: using mnemonics, lyrics, and even songs to simplify complex concepts. These creative methods made learning fun, interactive, and easy to remember."</p>
+                        <p class="mt-4 font-bold earth-brown">- Batch 1 Student</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-lg border reveal" style="transition-delay: 0.4s;">
+                        <p class="text-gray-600 italic">"The mentorship program has been a turning point in my journey. It provided me with clear guidance, practical strategies, and the confidence to pursue my goals. I am grateful for the constant support."</p>
+                        <p class="mt-4 font-bold earth-brown">- Batch 1 Student</p>
+                    </div>
+                     <div class="hidden lg:block bg-white p-6 rounded-2xl shadow-lg border reveal" style="transition-delay: 0.6s;">
+                        <p class="text-gray-600 italic">"Apoorva is the best and friendly mentor. Her way of explaining is more friendly, informative and comfortable. She makes sure that every concept is covered."</p>
+                        <p class="mt-4 font-bold earth-brown">- Batch 1 Student</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="resources" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold earth-brown reveal">Free Resources & Tips</h2>
+                    <p class="mt-4 text-gray-600 max-w-xl mx-auto reveal">Get started with some of our free guides and video content.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-stone-50 p-8 rounded-2xl shadow-md border hover:shadow-lg transition-shadow reveal">
+                        <h3 class="font-bold text-xl earth-brown">Top 5 Mistakes in GATE Geology</h3>
+                        <p class="text-gray-600 mt-2">Learn what common pitfalls to avoid during your exam prep.</p>
+                        <a href="#" class="inline-block mt-4 text-green-700 font-semibold hover:underline">Read More &rarr;</a>
+                    </div>
+                    <div class="bg-stone-50 p-8 rounded-2xl shadow-md border hover:shadow-lg transition-shadow reveal" style="transition-delay: 0.2s;">
+                        <h3 class="font-bold text-xl earth-brown">Smart Revision Tips for JAM</h3>
+                        <p class="text-gray-600 mt-2">Effective strategies to revise the vast syllabus efficiently.</p>
+                        <a href="#" class="inline-block mt-4 text-green-700 font-semibold hover:underline">Watch Video &rarr;</a>
+                    </div>
+                     <div class="bg-stone-50 p-8 rounded-2xl shadow-md border hover:shadow-lg transition-shadow reveal" style="transition-delay: 0.4s;">
+                        <h3 class="font-bold text-xl earth-brown">CSIR-NET Important Topics</h3>
+                        <p class="text-gray-600 mt-2">A curated list of high-yield topics to focus on for the exam.</p>
+                        <a href="#" class="inline-block mt-4 text-green-700 font-semibold hover:underline">Download PDF &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="register" class="py-20">
+            <div class="container mx-auto px-6">
+                 <div class="max-w-3xl mx-auto bg-white/90 backdrop-blur-sm p-8 md:p-12 rounded-3xl shadow-2xl border border-white/50 relative overflow-hidden">
+                    <!-- Decor element -->
+                    <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-green-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                    <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-amber-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+                    <div class="text-center mb-10 relative z-10">
+                        <span class="inline-block py-1 px-3 rounded-full bg-green-100 text-green-800 text-sm font-semibold mb-4 tracking-wide">NEW BATCH OCT 2025</span>
+                        <h2 class="text-4xl md:text-5xl font-bold earth-brown reveal mb-4 tracking-tight">Join the Mentorship</h2>
+                        <p class="text-lg text-gray-600 reveal max-w-xl mx-auto leading-relaxed">Fill out the form below to secure your spot. We're excited to help you rock your exams!</p>
+                    </div>
+                    
+                    <form id="registrationForm" class="reveal space-y-6 relative z-10">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="form-input-group transition-all duration-300">
+                                <label for="name" class="block text-sm font-semibold text-gray-700 mb-1 ml-1 transition-colors">Full Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="name" name="Name" placeholder="Jane Doe" required 
+                                    class="w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-gray-800 placeholder-gray-400">
+                            </div>
+                             <div class="form-input-group transition-all duration-300">
+                                <label for="email" class="block text-sm font-semibold text-gray-700 mb-1 ml-1 transition-colors">Email Address <span class="text-red-500">*</span></label>
+                                <input type="email" id="email" name="Email" placeholder="jane@university.edu" required 
+                                    class="w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-gray-800 placeholder-gray-400">
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                             <div class="form-input-group transition-all duration-300">
+                                <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1 ml-1 transition-colors">Phone Number <span class="text-red-500">*</span></label>
+                                <input type="tel" id="phone" name="Phone" placeholder="+91 98765 43210" required 
+                                    class="w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-gray-800 placeholder-gray-400">
+                            </div>
+                            <div class="form-input-group transition-all duration-300">
+                                <label for="college" class="block text-sm font-semibold text-gray-700 mb-1 ml-1 transition-colors">College / University <span class="text-red-500">*</span></label>
+                                <input type="text" id="college" name="College" placeholder="Your Institute Name" required 
+                                    class="w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-gray-800 placeholder-gray-400">
+                            </div>
+                        </div>
+
+                        <div class="form-input-group transition-all duration-300">
+                            <label for="plan" class="block text-sm font-semibold text-gray-700 mb-1 ml-1 transition-colors">Preferred Plan <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <select id="plan" name="Plan" required 
+                                    class="w-full px-5 py-4 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:bg-white transition-all text-gray-800 appearance-none cursor-pointer">
+                                    <option value="" disabled selected>Select a mentorship plan...</option>
+                                    <option value="Quartz">Quartz (Basic) - ₹1500</option>
+                                    <option value="Garnet">Garnet (Silver) - ₹3000</option>
+                                    <option value="Diamond">Diamond (Gold) - ₹4000</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 pt-4">
+                           <button type="submit" id="submitButton" class="w-full group relative flex items-center justify-center bg-green-700 text-white px-8 py-5 rounded-xl text-lg font-bold hover:bg-green-800 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-xl hover:shadow-green-700/30 overflow-hidden">
+                                <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                                <span class="relative z-10 flex items-center gap-2 btn-text">
+                                    Submit Registration <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                                </span>
+                                <div class="hidden absolute inset-0 flex items-center justify-center loading-spinner">
+                                    <svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="formMessage" class="mt-6 text-center min-h-[20px] transition-all duration-300"></div>
+                 </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-20 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold earth-brown reveal">Get in Touch</h2>
+                <p class="mt-4 text-gray-600 max-w-xl mx-auto reveal">Have questions? Feel free to reach out to us!</p>
+                <div class="mt-8 flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12 reveal">
+                    <a href="mailto:geology.apoorva95@gmail.com" class="flex items-center text-lg text-gray-700 hover:text-green-700 transition">
+                        <i data-lucide="mail" class="w-6 h-6 mr-3"></i>
+                        geology.apoorva95@gmail.com
+                    </a>
+                </div>
+                <div class="mt-8 flex justify-center space-x-6 reveal">
+                    <a href="underconstruction.html" class="text-gray-500 hover:text-green-700"><i data-lucide="instagram" class="w-8 h-8"></i></a>
+                    <a href="https://www.linkedin.com/in/apoorva-pimprikar-7479b6262?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" class="text-gray-500 hover:text-green-700"><i data-lucide="linkedin" class="w-8 h-8"></i></a>
+                    <a href="underconstruction.html" class="text-gray-500 hover:text-green-700"><i data-lucide="youtube" class="w-8 h-8"></i></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-earth-brown text-white opacity-0 transition-opacity duration-1000">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-4 md:mb-0">
+                    <p>&copy; 2025 All Rights Reserved by Om Bhogan</p>
+                    <p class="text-sm text-gray-300">Designed for Geology Learners.</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#home" class="hover:text-green-300 transition-transform transform hover:scale-105">Home</a>
+                    <a href="#about" class="hover:text-green-300 transition-transform transform hover:scale-105">About</a>
+                    <a href="#programs" class="hover:text-green-300 transition-transform transform hover:scale-105">Programs</a>
+                    <a href="#resources" class="hover:text-green-300 transition-transform transform hover:scale-105">Resources</a>
+                    <a href="#contact" class="hover:text-green-300 transition-transform transform hover:scale-105">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="chat-container">
+        <button id="chat-widget" class="fixed bottom-6 right-6 bg-green-700 text-white w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transform transition-transform hover:scale-110 z-[9990]">
+             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5.12 6.12 6 6 3.83-3.83a2 2 0 0 0 0-2.83L12.12.64a2 2 0 0 0-2.83 0L5.12 4.81a2 2 0 0 0 0 2.83Z"/><path d="m12 12 6 6 4.12-4.12a2 2 0 0 0 0-2.83l-2.83-2.83a2 2 0 0 0-2.83 0L12 12Z"/><path d="m12.87 12.87-1.74 1.74a2 2 0 0 1-2.83 0L.64 6.96a2 2 0 0 1 0-2.83L3.46 1.3a2 2 0 0 1 2.83 0l6.58 6.58"/></svg>
+        </button>
+
+        <div id="chat-window" class="hidden fixed bottom-24 right-6 w-[calc(100%-3rem)] max-w-sm h-[70vh] max-h-[500px] bg-white/70 backdrop-blur-xl rounded-2xl shadow-2xl flex flex-col transition-all duration-300 z-[9991]">
+            <div class="p-4 bg-earth-brown/90 text-white rounded-t-2xl flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-lg">DnyaBot</h3>
+                    <p class="text-xs text-green-200">Your Geology Guide</p>
+                </div>
+                <button id="close-chat-btn" class="text-white hover:text-gray-300 text-2xl leading-none">&times;</button>
+            </div>
+
+            <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
+                </div>
+
+            <div class="p-4 border-t border-gray-200">
+                 <div id="quick-replies" class="flex flex-wrap gap-2 mb-3">
+                    <button class="quick-reply-btn">📘 Programs</button>
+                    <button class="quick-reply-btn">🧑‍🏫 Mentor Info</button>
+                    <button class="quick-reply-btn">🕒 Batch Schedule</button>
+                    <button class="quick-reply-btn">📝 Register Now</button>
+                </div>
+                <form id="chat-form" class="flex items-center gap-2">
+                    <input type="text" id="chat-input" placeholder="Ask a question..." class="w-full px-4 py-2 border border-gray-300 rounded-full focus:ring-green-500 focus:border-green-500">
+                    <button type="submit" class="bg-green-700 text-white p-2 rounded-full hover:bg-green-800 transition">
+                        <i data-lucide="send-horizontal" class="w-5 h-5"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NEW: Vanta.js Globe Background Initialization ---
+        // This function is wrapped in a check to ensure VANTA and THREE are loaded
+        function initVanta() {
+            if (window.VANTA && window.THREE) {
+                VANTA.GLOBE({
+                    el: "#vanta-bg",
+                    mouseControls: true,
+                    touchControls: true,
+                    gyroControls: false,
+                    minHeight: 200.00,
+                    minWidth: 200.00,
+                    scale: 1.00,
+                    scaleMobile: 1.00,
+                    color: 0xc8dcf0,      // Pastel Blue/Silver
+                    color2: 0x9fbfff,     // Lighter Pastel Blue
+                    backgroundColor: 0xFDFBF8, // Your site's light beige
+                    size: 1.00 // Adjust size as needed
+                });
+            } else {
+                // Retry if libraries aren't loaded yet
+                setTimeout(initVanta, 200);
+            }
+        }
+        
+        // --- NEW: Cursor Glow Logic ---
+        const cursorGlow = document.getElementById('cursor-glow');
+        if (cursorGlow) {
+            window.addEventListener('mousemove', (e) => {
+                // Center the glow on the cursor pointer
+                const x = e.clientX - (cursorGlow.offsetWidth / 2);
+                const y = e.clientY - (cursorGlow.offsetHeight / 2);
+                cursorGlow.style.transform = `translate(${x}px, ${y}px)`;
+            });
+        }
+
+
+        // Page Loader
+        const loader = document.getElementById('page-loader');
+        const header = document.querySelector('header');
+        const main = document.querySelector('main');
+        const footer = document.querySelector('footer');
+
+        window.addEventListener('load', () => {
+            // Use a timeout to ensure the loader is visible for a minimum duration
+            setTimeout(() => {
+                loader.classList.add('opacity-0');
+                header.classList.remove('opacity-0');
+                main.classList.remove('opacity-0');
+                footer.classList.remove('opacity-0');
+                
+                // Remove loader from DOM after transition
+                setTimeout(() => loader.style.display = 'none', 700);
+                
+                // Initialize Vanta *after* the page is loaded and loader is gone
+                initVanta();
+                
+            }, 1500); // Minimum 1.5 seconds loading time
+        });
+
+        // Lucide Icons
+        lucide.createIcons();
+
+        // Mobile Menu Toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.classList.toggle('open');
+        });
+
+        // Countdown Timer - REMOVED
+        
+        // Scroll Animations
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            revealElements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 100) {
+                    el.classList.add('active');
+                }
+            });
+        };
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Trigger on load
+
+
+        // --- GOOGLE SHEETS FORM SUBMISSION LOGIC ---
+        const form = document.getElementById('registrationForm');
+        const formMessage = document.getElementById('formMessage');
+        const submitButton = document.getElementById('submitButton');
+        const btnText = submitButton.querySelector('.btn-text');
+        const btnLoader = submitButton.querySelector('.loading-spinner');
+
+        function triggerSuccessAnimation() {
+            // Play sound effect with Tone.js if available
+            if (window.Tone) {
+                const synth = new Tone.Synth({
+                    oscillator: { type: 'sine' },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 },
+                }).toDestination();
+                synth.triggerAttackRelease("E6", "8n", Tone.now());
+                setTimeout(() => synth.triggerAttackRelease("A6", "8n", Tone.now()), 150);
+            }
+
+            // Create confetti
+            const confettiContainer = document.createElement('div');
+            confettiContainer.classList.add('absolute', 'inset-0', 'overflow-hidden', 'pointer-events-none');
+            // Append to body to ensure confetti falls over everything, or container if preferred
+            document.body.appendChild(confettiContainer); 
+            
+            const confettiColors = ['#4CAF50', '#FFD700', '#8D6E63', '#FFF59D', '#A5D6A7'];
+
+            for (let i = 0; i < 60; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti-piece');
+                // Random starting position
+                confetti.style.left = `${Math.random() * 100}%`;
+                // Position near the button initially
+                const btnRect = submitButton.getBoundingClientRect();
+                confetti.style.top = `${btnRect.top + window.scrollY}px`;
+                confetti.style.left = `${btnRect.left + (Math.random() * btnRect.width)}px`;
+                
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                confetti.style.animationDuration = `${1.5 + Math.random()}s`;
+                
+                const size = Math.random() * 8 + 4; 
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.backgroundColor = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                
+                // Add CSS for falling effect dynamically if needed, or rely on existing keyframes
+                // We'll reuse the existing keyframe 'confetti-up' but modify styling slightly to make it visible
+                confetti.style.position = 'absolute';
+                
+                confettiContainer.appendChild(confetti);
+            }
+            
+            // Clean up confetti
+            setTimeout(() => {
+                if(confettiContainer) confettiContainer.remove();
+            }, 3000);
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            
+            // 1. UI Loading State
+            submitButton.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            formMessage.innerHTML = '';
+            
+            // --- CONFIGURATION ---
+            // REPLACE THE URL BELOW WITH YOUR DEPLOYED GOOGLE APPS SCRIPT WEB APP URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbznF9nSMQHi0Y9EDmQofLxOBmdRX3CG_hNDfRjzqXoRPPFMS3bfs6uqaDPb48MVk0i8/exec';
+            
+            const formData = new FormData(form);
+
+            // 2. Fetch Request
+            fetch(scriptURL, { method: 'POST', body: formData })
+                .then(response => {
+                    // Google Apps Script returns a redirect (302) or a JSON response. 
+                    // 'ok' is true for 200-299.
+                    if (response.ok) {
+                        // Success!
+                        triggerSuccessAnimation();
+                        form.reset();
+                        formMessage.innerHTML = `
+                            <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span><strong>Success!</strong> Welcome to the G-Dnyasa family! We'll contact you soon.</span>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                    formMessage.innerHTML = `
+                         <div class="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span><strong>Oops!</strong> Something went wrong. Please check your connection and try again.</span>
+                        </div>
+                    `;
+                })
+                .finally(() => {
+                    // Reset Button State
+                    submitButton.disabled = false;
+                    btnText.classList.remove('hidden');
+                    btnLoader.classList.add('hidden');
+                });
+        });
+
+        // --- CHATBOT LOGIC ---
+        const chatWidget = document.getElementById('chat-widget');
+        const chatWindow = document.getElementById('chat-window');
+        const closeChatBtn = document.getElementById('close-chat-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const quickRepliesContainer = document.getElementById('quick-replies');
+        let initialGreetingSent = false;
+
+        const knowledgeBase = {
+            'default': "I'm not sure I can answer that. Try asking about our programs, the mentor, batch schedule, or how to register.",
+            'greeting': "Hi 👋 I’m DnyaBot! I can help you learn about G-Dnyasa’s mentorship, plans, and upcoming batches. What would you like to know?",
+            'g-dnyasa': "✨ G-Dnyasa is an online geology mentorship program that helps UG/PG students prepare for CSIR-NET, GATE, IIT JAM, and university exams.",
+            'mentor': "🧑‍🏫 The mentor is Ms. Apoorva Pimprikar (MSc Applied Geology, GATE GG 2024 & 2025). She is passionate about making complex geological concepts accessible and enjoyable.",
+            'plans': "💎 We offer three plans: Quartz (Basic), Garnet (Silver), and Diamond (Gold). Each offers live sessions, mock tests, and study materials, with higher tiers providing more sessions and extra features like resume reviews.",
+            'batch': "🕒 The next batch starts on October 8, 2025. Classes are held online every Wednesday & Thursday, from 7 PM to 9 PM.",
+            'register': "📋 You can register by scrolling to the registration form on this page and filling it out. Your response will be saved automatically!",
+            'materials': "📚 You can find free notes, revision tips, and links to helpful videos in the ‘Free Resources & Tips’ section on our website."
+        };
+
+        const addMessage = (sender, message) => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('p-3', 'rounded-2xl', 'max-w-[85%]', 'w-fit', 'text-sm', 'transition-opacity', 'duration-300');
+            if (sender === 'bot') {
+                messageElement.classList.add('bg-stone-200', 'text-gray-800', 'self-start');
+                messageElement.innerHTML = message.replace(/\n/g, '<br>');
+            } else {
+                messageElement.classList.add('bg-green-700', 'text-white', 'self-end');
+                messageElement.textContent = message;
+            }
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        };
+        
+        const getBotResponse = (userInput) => {
+            const input = userInput.toLowerCase();
+            if (input.includes('plan') || input.includes('quartz') || input.includes('garnet') || input.includes('diamond') || input.includes('program')) return knowledgeBase.plans;
+            if (input.includes('mentor') || input.includes('teacher') || input.includes('apoorva')) return knowledgeBase.mentor;
+            if (input.includes('batch') || input.includes('schedule') || input.includes('time') || input.includes('start')) return knowledgeBase.batch;
+            if (input.includes('register') || input.includes('join') || input.includes('enroll')) return knowledgeBase.register;
+            if (input.includes('material') || input.includes('notes') || input.includes('resource')) return knowledgeBase.materials;
+            if (input.includes('g-dnyasa') || input.includes('what is')) return knowledgeBase['g-dnyasa'];
+            if (input.includes('hello') || input.includes('hi')) return knowledgeBase.greeting;
+            return knowledgeBase.default;
+        };
+
+        const handleUserInput = (input) => {
+            if(!input.trim()) return;
+            addMessage('user', input);
+            chatInput.value = '';
+            
+            setTimeout(() => {
+                const botResponse = getBotResponse(input);
+                addMessage('bot', botResponse);
+            }, 500);
+        };
+        
+        chatWidget.addEventListener('click', () => {
+            chatWindow.classList.toggle('hidden');
+            if (!chatWindow.classList.contains('hidden') && !initialGreetingSent) {
+                addMessage('bot', knowledgeBase.greeting);
+                initialGreetingSent = true;
+            }
+        });
+        
+        closeChatBtn.addEventListener('click', () => chatWindow.classList.add('hidden'));
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleUserInput(chatInput.value);
+        });
+
+        quickRepliesContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('quick-reply-btn')) {
+                const quickReplyText = e.target.textContent;
+                addMessage('user', quickReplyText);
+                 setTimeout(() => {
+                    const botResponse = getBotResponse(quickReplyText);
+                    addMessage('bot', botResponse);
+                }, 500);
+            }
+        });
+
+        // Add styles for quick reply buttons
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .quick-reply-btn {
+                background-color: #f5f5f4; /* stone-100 */
+                border: 1px solid #e7e5e4; /* stone-200 */
+                color: #5D4037; /* earth-brown */
+                padding: 6px 12px;
+                border-radius: 9999px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            .quick-reply-btn:hover {
+                background-color: #e7e5e4; /* stone-200 */
+            }
+            @keyframes shimmer {
+                100% { transform: translateX(100%); }
+            }
+        `;
+        document.head.appendChild(style);
+
+
+        /*
+        ================================================================================
+        HOW TO CONNECT THIS FORM TO YOUR GOOGLE SHEET (STEP-BY-STEP)
+        ================================================================================
+        
+        1.  Create a new Google Sheet at https://sheets.google.com/create
+        
+        2.  In the first row (Row 1), add these EXACT headers in columns A, B, C, D, E, F:
+            [Timestamp] [Name] [Email] [Phone] [College] [Plan]
+            (Case-sensitive! Make sure they match the 'name' attributes in the HTML form)
+
+        3.  Go to Extensions > Apps Script in the Google Sheet menu.
+
+        4.  Delete any code in the script editor and paste the following code exactly:
+
+            var sheetName = 'Sheet1';
+            var scriptProp = PropertiesService.getScriptProperties();
+
+            function intialSetup () {
+              var activeSpreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+              scriptProp.setProperty('key', activeSpreadsheet.getId());
+            }
+
+            function doPost (e) {
+              var lock = LockService.getScriptLock();
+              lock.tryLock(10000);
+
+              try {
+                var doc = SpreadsheetApp.openById(scriptProp.getProperty('key'));
+                var sheet = doc.getSheetByName(sheetName);
+
+                var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+                var nextRow = headers.map(function(header) {
+                  if(header === 'Timestamp'){
+                    return new Date();
+                  } else {
+                    return e.parameter[header];
+                  }
+                });
+
+                sheet.appendRow(nextRow);
+
+                return ContentService
+                  .createTextOutput(JSON.stringify({ 'result': 'success', 'row': nextRow }))
+                  .setMimeType(ContentService.MimeType.JSON);
+              }
+
+              catch (e) {
+                return ContentService
+                  .createTextOutput(JSON.stringify({ 'result': 'error', 'error': e }))
+                  .setMimeType(ContentService.MimeType.JSON);
+              }
+
+              finally {
+                lock.releaseLock();
+              }
+            }
+
+        5.  Save the project (File > Save) and name it "Form Handler".
+
+        6.  Run the 'intialSetup' function:
+            - Select 'intialSetup' from the dropdown next to the "Debug" button.
+            - Click "Run".
+            - You will be asked to "Review Permissions". Click it.
+            - Choose your account. 
+            - If you see "Google hasn't verified this app", click "Advanced" -> "Go to Form Handler (unsafe)".
+            - Click "Allow".
+
+        7.  Deploy the Web App:
+            - Click "Deploy" (blue button) > "New deployment".
+            - Click the gear icon > "Web app".
+            - Description: "Website Contact Form".
+            - Execute as: "Me" (your email).
+            - Who has access: "Anyone" (CRITICAL STEP).
+            - Click "Deploy".
+
+        8.  Copy the "Web app URL" generated.
+
+        9.  Paste that URL into the `const scriptURL = '...'` line in the JavaScript code above (around line 690).
+        ================================================================================
+        */
+    </script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-Dnyasa Store | Coming Soon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; overflow: hidden; background-color: #FDFBF8; }
+        
+        /* Glassmorphism Card */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        #canvas-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        }
+
+        /* Float Animation for Text */
+        @keyframes float-text {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-float { animation: float-text 6s ease-in-out infinite; }
+    </style>
+</head>
+<body class="relative h-screen w-screen flex items-center justify-center text-gray-800">
+
+    <div id="canvas-container"></div>
+
+    <div class="relative z-10 p-6">
+        <div class="glass-card max-w-lg w-full rounded-3xl p-10 text-center transform transition-all hover:scale-[1.02] duration-500">
+            
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-700 mb-6 shadow-sm animate-float">
+                <i data-lucide="shopping-bag" class="w-8 h-8"></i>
+            </div>
+
+            <h1 class="text-4xl md:text-5xl font-extrabold text-[#5D4037] mb-2 tracking-tight">
+                Gear Up!
+            </h1>
+            <p class="text-lg font-semibold text-green-700 mb-6">Store Excavation in Progress...</p>
+
+            <p class="text-gray-600 mb-8 leading-relaxed">
+                We are curating a collection of geology-themed merch. 
+                Expect <strong>premium T-shirts</strong>, <strong>rugged mugs</strong>, and 
+                <strong>field essentials</strong>.
+            </p>
+
+            <form id="notify-form" class="flex flex-col sm:flex-row gap-3">
+                <input 
+                    type="email" 
+                    name="Email" 
+                    placeholder="Enter your email" 
+                    required
+                    class="flex-1 px-5 py-4 rounded-xl border-2 border-[#5D4037]/20 focus:outline-none focus:border-[#5D4037] bg-white/90 font-medium"
+                >
+                <button type="submit" class="bg-[#5D4037] text-white px-6 py-4 rounded-xl font-bold hover:bg-[#3E2723] transition duration-300 shadow-xl hover:shadow-2xl flex items-center justify-center gap-2 active:scale-95">
+                    Notify Me <i data-lucide="pickaxe" class="w-5 h-5"></i>
+                </button>
+            </form>
+            <p id="success-msg" class="hidden text-green-700 font-semibold mt-4 text-sm">✨ We've added you to the list! You'll be the first to know.</p>
+            <p id="error-msg" class="hidden text-red-600 font-semibold mt-4 text-sm"></p>
+
+            <div class="mt-8 pt-6 border-t border-gray-200/50">
+                <a href="index.html" class="inline-flex items-center text-gray-500 hover:text-[#5D4037] transition font-medium text-sm group">
+                    <i data-lucide="arrow-left" class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform"></i>
+                    Back to G-Dnyasa Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // --- THREE.JS BACKGROUND SETUP (Store Themed) ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0xFDFBF8, 10, 50); 
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 20;
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 10, 10);
+        scene.add(dirLight);
+
+        // Materials
+        const matGreen = new THREE.MeshLambertMaterial({ color: 0x4CAF50 });
+        const matBrown = new THREE.MeshLambertMaterial({ color: 0x5D4037 });
+        const matBeige = new THREE.MeshLambertMaterial({ color: 0xE0E0E0 });
+        const materials = [matGreen, matBrown, matBeige];
+
+        function createMug() {
+            const mugGroup = new THREE.Group();
+            const cylinderGeo = new THREE.CylinderGeometry(0.8, 0.8, 2, 16);
+            const material = materials[Math.floor(Math.random() * materials.length)];
+            const cylinder = new THREE.Mesh(cylinderGeo, material);
+            mugGroup.add(cylinder);
+            const handleGeo = new THREE.TorusGeometry(0.6, 0.15, 8, 16, Math.PI);
+            const handle = new THREE.Mesh(handleGeo, material);
+            handle.position.set(0.8, 0, 0);
+            handle.rotation.z = -Math.PI / 2;
+            mugGroup.add(handle);
+            return mugGroup;
+        }
+
+        const objects = [];
+        for (let i = 0; i < 25; i++) {
+            const item = createMug();
+            item.position.x = (Math.random() - 0.5) * 40;
+            item.position.y = (Math.random() - 0.5) * 40;
+            item.position.z = (Math.random() - 0.5) * 30 - 10;
+            item.rotation.x = Math.random() * Math.PI;
+            item.rotation.y = Math.random() * Math.PI;
+            scene.add(item);
+            objects.push({ mesh: item, rotSpeedX: (Math.random() - 0.5) * 0.02, rotSpeedY: (Math.random() - 0.5) * 0.02 });
+        }
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - window.innerWidth / 2) * 0.001;
+            mouseY = (event.clientY - window.innerHeight / 2) * 0.001;
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            camera.rotation.y += (mouseX - camera.rotation.y) * 0.05;
+            camera.rotation.x += (mouseY - camera.rotation.x) * 0.05;
+            objects.forEach(obj => {
+                obj.mesh.rotation.x += obj.rotSpeedX;
+                obj.mesh.rotation.y += obj.rotSpeedY;
+            });
+            renderer.render(scene, camera);
+        }
+        animate();
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+
+        // --- SUPABASE FORM LOGIC ---
+        
+        // YOUR CREDENTIALS
+        const SUPABASE_URL = 'https://bcilpbllbmtbfbbymvpw.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWxwYmxsYm10YmZiYnltdnB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODI4MjAsImV4cCI6MjA4MDk1ODgyMH0.u0FsHel8AP3osNsoXsljAx2srkYhgU2nfZ7gieN1Gps';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        document.getElementById('notify-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = this.querySelector('button');
+            const emailInput = this.querySelector('input[name="Email"]');
+            const errorMsg = document.getElementById('error-msg');
+            
+            // Loading State
+            btn.innerHTML = 'Subscribing...';
+            btn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            const email = emailInput.value;
+
+            // Send to Supabase
+            const { data, error } = await supabase
+                .from('subscribers')
+                .insert([
+                    { email: email, source: 'Store Page' }
+                ]);
+
+            if (error) {
+                console.error('Supabase Error:', error);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+                errorMsg.innerText = "Error: " + error.message;
+                errorMsg.classList.remove('hidden');
+            } else {
+                this.classList.add('hidden');
+                document.getElementById('success-msg').classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
