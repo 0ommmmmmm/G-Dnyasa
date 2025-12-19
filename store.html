@@ -199,6 +199,44 @@
                 document.getElementById('success-msg').classList.remove('hidden');
             }
         });
+        <script>
+/* ===============================
+   SUPABASE KEEP-ALIVE (24 HOURS)
+   =============================== */
+
+const KEEP_ALIVE_KEY = "supabase_last_ping";
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
+async function keepSupabaseAlive() {
+    try {
+        const lastPing = localStorage.getItem(KEEP_ALIVE_KEY);
+        const now = Date.now();
+
+        // Only ping once every 24 hours
+        if (lastPing && now - lastPing < ONE_DAY) {
+            return;
+        }
+
+        const { error } = await supabase
+            .from("subscribers")
+            .select("id")
+            .limit(1);
+
+        if (!error) {
+            localStorage.setItem(KEEP_ALIVE_KEY, now);
+            console.log("✅ Supabase keep-alive ping sent");
+        } else {
+            console.warn("⚠️ Supabase keep-alive failed:", error.message);
+        }
+    } catch (err) {
+        console.error("❌ Keep-alive error:", err);
+    }
+}
+
+// Run on page load
+keepSupabaseAlive();
+</script>
+
     </script>
 </body>
 </html>
