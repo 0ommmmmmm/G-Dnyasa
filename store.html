@@ -9,8 +9,6 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
         body { font-family: 'Inter', sans-serif; overflow: hidden; background-color: #FDFBF8; }
         
@@ -159,83 +157,40 @@
         });
 
 
-        // --- SUPABASE FORM LOGIC ---
+        // --- GOOGLE SHEETS CONNECTION LOGIC ---
         
-        // YOUR CREDENTIALS
-        const SUPABASE_URL = 'https://bcilpbllbmtbfbbymvpw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWxwYmxsYm10YmZiYnltdnB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODI4MjAsImV4cCI6MjA4MDk1ODgyMH0.u0FsHel8AP3osNsoXsljAx2srkYhgU2nfZ7gieN1Gps';
+        // PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT URL BELOW
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwOt4nxkNQ8dsreEfilrKwo75wYPJpz4cNReNIGw_Q1cYUEt2_-DrmQHMl-2I2fgRll/exec'; 
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const form = document.getElementById('notify-form');
+        const successMsg = document.getElementById('success-msg');
+        const errorMsg = document.getElementById('error-msg');
+        const submitBtn = form.querySelector('button');
 
-        document.getElementById('notify-form').addEventListener('submit', async function(e) {
+        form.addEventListener('submit', e => {
             e.preventDefault();
             
-            const btn = this.querySelector('button');
-            const emailInput = this.querySelector('input[name="Email"]');
-            const errorMsg = document.getElementById('error-msg');
-            
             // Loading State
-            btn.innerHTML = 'Subscribing...';
-            btn.disabled = true;
+            submitBtn.innerHTML = 'Subscribing...';
+            submitBtn.disabled = true;
             errorMsg.classList.add('hidden');
 
-            const email = emailInput.value;
-
-            // Send to Supabase
-            const { data, error } = await supabase
-                .from('subscribers')
-                .insert([
-                    { email: email, source: 'Store Page' }
-                ]);
-
-            if (error) {
-                console.error('Supabase Error:', error);
-                btn.innerHTML = 'Retry';
-                btn.disabled = false;
-                errorMsg.innerText = "Error: " + error.message;
-                errorMsg.classList.remove('hidden');
-            } else {
-                this.classList.add('hidden');
-                document.getElementById('success-msg').classList.remove('hidden');
-            }
+            // Send Data
+            fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                .then(response => {
+                    // Success
+                    form.classList.add('hidden');
+                    successMsg.classList.remove('hidden');
+                })
+                .catch(error => {
+                    // Error
+                    console.error('Error!', error.message);
+                    submitBtn.innerHTML = 'Retry';
+                    submitBtn.disabled = false;
+                    errorMsg.innerText = "Connection failed. Please try again.";
+                    errorMsg.classList.remove('hidden');
+                });
         });
-        <script>
-/* ===============================
-   SUPABASE KEEP-ALIVE (24 HOURS)
-   =============================== */
-
-const KEEP_ALIVE_KEY = "supabase_last_ping";
-const ONE_DAY = 24 * 60 * 60 * 1000;
-
-async function keepSupabaseAlive() {
-    try {
-        const lastPing = localStorage.getItem(KEEP_ALIVE_KEY);
-        const now = Date.now();
-
-        // Only ping once every 24 hours
-        if (lastPing && now - lastPing < ONE_DAY) {
-            return;
-        }
-
-        const { error } = await supabase
-            .from("subscribers")
-            .select("id")
-            .limit(1);
-
-        if (!error) {
-            localStorage.setItem(KEEP_ALIVE_KEY, now);
-            console.log("✅ Supabase keep-alive ping sent");
-        } else {
-            console.warn("⚠️ Supabase keep-alive failed:", error.message);
-        }
-    } catch (err) {
-        console.error("❌ Keep-alive error:", err);
-    }
-}
-
-// Run on page load
-keepSupabaseAlive();
-</script>
 
     </script>
 </body>
