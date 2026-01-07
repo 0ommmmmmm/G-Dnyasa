@@ -13,8 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
 
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
         body { font-family: 'Inter', sans-serif; overflow: hidden; }
         .earth-brown { color: #5D4037; }
@@ -65,7 +63,7 @@
 
             <div class="max-w-md mx-auto relative">
                 <form id="notifyForm" class="flex flex-col sm:flex-row gap-3">
-                    <input type="email" id="notifyEmail" placeholder="Enter your email for updates" required 
+                    <input type="email" name="email" id="notifyEmail" placeholder="Enter your email for updates" required 
                         class="flex-1 px-5 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 shadow-sm bg-white/90">
                     <button type="submit" class="bg-earth-brown text-white px-6 py-3 rounded-full font-semibold hover:bg-stone-700 transition shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
                         Notify Me <i data-lucide="bell" class="w-4 h-4"></i>
@@ -91,10 +89,10 @@
     </footer>
 
     <script>
-        // Initialize Lucide Icons
+        // 1. Initialize Lucide Icons
         lucide.createIcons();
 
-        // Initialize Vanta.js (Net Effect)
+        // 2. Initialize Vanta.js (Net Effect)
         window.addEventListener('load', () => {
             if (window.VANTA) {
                 VANTA.NET({
@@ -115,21 +113,17 @@
             }
         });
 
-        // --- SUPABASE & FORM LOGIC ---
+        // --- GOOGLE SHEETS FORM LOGIC ---
         
-        // YOUR CREDENTIALS
-        const SUPABASE_URL = 'https://bcilpbllbmtbfbbymvpw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjaWxwYmxsYm10YmZiYnltdnB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzODI4MjAsImV4cCI6MjA4MDk1ODgyMH0.u0FsHel8AP3osNsoXsljAx2srkYhgU2nfZ7gieN1Gps';
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // TODO: PASTE YOUR DEPLOYED GOOGLE APPS SCRIPT URL HERE
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbye4PL0SfUsr7BJ6re31e-ZDAmhOc7zYsm5mVHQk0urQvr-fy4qr_NyAtYKLi0Iur3k/exec';
 
         const form = document.getElementById('notifyForm');
         const msg = document.getElementById('successMsg');
         const errorMsg = document.getElementById('errorMsg');
-        const emailInput = document.getElementById('notifyEmail');
         const btn = form.querySelector('button');
 
-        form.addEventListener('submit', async (e) => {
+        form.addEventListener('submit', (e) => {
             e.preventDefault();
             
             // Loading State
@@ -138,25 +132,27 @@
             btn.disabled = true;
             errorMsg.classList.add('hidden');
 
-            const email = emailInput.value;
-
-            // Send to Supabase
-            const { data, error } = await supabase
-                .from('subscribers')
-                .insert([
-                    { email: email, source: 'Tours Page' }
-                ]);
-
-            if (error) {
-                console.error('Supabase Error:', error);
-                btn.innerHTML = 'Retry';
-                btn.disabled = false;
-                errorMsg.innerText = "Error: " + error.message;
-                errorMsg.classList.remove('hidden');
-            } else {
+            // Create Form Data
+            const data = new FormData(form);
+            
+            // Send to Google Sheets via Script
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                body: data
+            })
+            .then(response => {
+                // Google Scripts return a specific status, but 'no-cors' limits visibility.
+                // If the fetch completes without error, we assume success.
                 form.classList.add('hidden');
                 msg.classList.remove('hidden');
-            }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                btn.innerHTML = 'Retry';
+                btn.disabled = false;
+                errorMsg.innerText = "Connection failed. Please try again.";
+                errorMsg.classList.remove('hidden');
+            });
         });
     </script>
 </body>
